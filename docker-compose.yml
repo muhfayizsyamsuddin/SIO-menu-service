@@ -1,0 +1,54 @@
+services:
+  menu-service:
+    build: .
+    container_name: sio-menu-service
+    # ports:
+    #   - "3002:3002"
+    env_file:
+      - .env
+    networks:
+      - sio-net
+    depends_on:
+      menu-db:
+        condition: service_healthy
+    labels:
+       traefik.enable: true
+       traefik.docker.network: sio-net
+       traefik.http.routers.sio-menu.rule: PathPrefix(`/menus`)
+       traefik.http.routers.sio-menu.entrypoints: web
+       traefik.http.routers.sio-menu.middlewares: cors@file
+       traefik.http.services.sio-menu.loadbalancer.server.port: 3002
+
+  menu-db:
+    image: postgres:16-alpine
+    container_name: sio-menu-db
+    environment:
+      POSTGRES_DB: sio-menu-db
+      POSTGRES_USER: sio-menu-user
+      POSTGRES_PASSWORD: sio-menu-password222
+    volumes:
+      - sio-menu-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sio-menu-user -d sio-menu-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sio-net
+
+  adminer:
+    image: adminer:latest
+    container_name: sio-menu-adminer
+    ports:
+      - "8082:8080"
+    depends_on:
+      - menu-db
+    networks:
+      - sio-net
+
+volumes:
+  sio-menu-db-data:
+
+networks:
+  sio-net:
+    external: true
