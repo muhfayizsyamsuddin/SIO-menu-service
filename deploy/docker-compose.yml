@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
 
   menu-service:
-    build: .
+    image: faizms14/sio-menu-service:latest
     container_name: sio-menu-service
     env_file:
       - .env
